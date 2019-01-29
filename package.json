@@ -1,0 +1,30 @@
+{
+  "name": "DiscordAdvisorBot",
+  "version": "0.1.0",
+  "description": "Discord bot for Zetrith's Multiplayer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/notfood/Discord-Advisor-Bot.git"
+  },
+  "keywords": [
+    "heroku",
+    "discord",
+    "rimworld"
+  ],
+  "author": "notfood",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/notfood/Discord-Advisor-Bot/issues"
+  },
+  "homepage": "https://github.com/notfood/Discord-Advisor-Bot#readme",
+  "dependencies": {
+    "discord.js": "^11.4.2",
+    "fuse.js": "^3.3.0",
+    "googleapis": "^36.0.0"
+  }
+}
