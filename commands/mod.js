@@ -19,7 +19,6 @@ module.exports = {
   usage: '[mod name]',
   cooldown: 5,
   args: true,
-  usage: true,
 };
 
 module.exports.init = async function() {

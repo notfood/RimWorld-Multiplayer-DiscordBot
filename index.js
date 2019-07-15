@@ -12,7 +12,7 @@ for (const file of commandFiles) {
   
   if (typeof command.init === "function") {
     try {
-      command.init(client);
+      command.init();
     } catch (error) {
       console.log('there was an error trying to init command! ' + command.name);
       console.error(error);
