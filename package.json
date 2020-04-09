@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/notfood/Discord-Advisor-Bot#readme",
   "dependencies": {
+    "dotenv": "^8.2.0",
     "discord.js": "^11.5.1",
     "fuse.js": "^3.4.5",
     "googleapis": "^36.0.0"
