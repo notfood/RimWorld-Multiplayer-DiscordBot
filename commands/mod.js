@@ -19,6 +19,7 @@ module.exports = {
   usage: '[mod name]',
   cooldown: 5,
   args: true,
+  mods: [],
 };
 
 module.exports.init = async function() {
@@ -53,6 +54,7 @@ module.exports.init = async function() {
           obs: row[5],
         };
       });
+      module.exports.mods = mods;
       var options = {
         shouldSort: true,
         tokenize: true,

@@ -1,6 +1,7 @@
 const fs = require('fs');
+const express = require('express');
 const Discord = require('discord.js');
-const { prefix, token } = require('./config.js');
+const { prefix, token, expressPort } = require('./config.js');
 
 const client = new Discord.Client();
 client.commands = new Discord.Collection();
@@ -88,4 +89,24 @@ client.on('message', message => {
   }
 });
 
-client.login(token);
+if (token) {
+  client.login(token);
+} else {
+  console.warn("No discord_token passed! Bot not running.");
+}
+
+const expressApp = express();
+expressApp.get('/', (req, res) => res.send('The Times 3 January 2009 Chancellor on brink of second bailout for banks'));
+expressApp.get('/mod-compatibility', (req, res) => {
+  const mods = client.commands.get('mod').mods;
+  res.send(mods.reduce((obj, mod) => {
+    const compatibility = parseInt(mod.status);
+    if (mod.steam && !isNaN(compatibility)) {
+      obj[mod.steam] = compatibility;
+    }
+    return obj;
+  }, {}));
+});
+expressApp.listen(expressPort, () => {
+  console.log(`Listening for /mod-compatibility requests on port ${expressPort}`);
+});
