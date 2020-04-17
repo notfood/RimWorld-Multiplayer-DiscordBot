@@ -1,3 +1,4 @@
+require('dotenv').config();
 const config = {
   "prefix": "!",
   "google_private_key": process.env.google_private_key.replace(/\\n/g, '\n'),
