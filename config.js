@@ -4,6 +4,7 @@ const config = {
   "google_email": process.env.google_email,
   "token": process.env.discord_token,
   "spreadsheet": process.env.spreadsheet,
+  "expressPort": process.env.expressPort || 3000,
   "range": "A3:F",
 }
 
