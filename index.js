@@ -99,13 +99,27 @@ const expressApp = express();
 expressApp.get('/', (req, res) => res.send('The Times 3 January 2009 Chancellor on brink of second bailout for banks'));
 expressApp.get('/mod-compatibility', (req, res) => {
   const mods = client.commands.get('mod').mods;
-  res.send(mods.reduce((obj, mod) => {
-    const compatibility = parseInt(mod.status);
-    if (mod.steam && !isNaN(compatibility)) {
-      obj[mod.steam] = compatibility;
-    }
-    return obj;
-  }, {}));
+  if (req.query.format === "metadata") {
+    res.send(
+      mods.map(mod => ({
+        status: mod.status,
+        name: mod.name,
+        workshopId: parseInt(mod.steam) || 0,
+        notes: mod.obs || undefined
+      }))
+    );
+  } else {
+    // original {steamId: compatibility} format
+    res.send(
+      mods.reduce((obj, mod) => {
+        const compatibility = parseInt(mod.status.substr(0,1));
+        if (mod.steam && !isNaN(compatibility)) {
+          obj[mod.steam] = compatibility;
+        }
+        return obj;
+      }, {})
+    );
+  }
 });
 expressApp.listen(expressPort, () => {
   console.log(`Listening for /mod-compatibility requests on port ${expressPort}`);
