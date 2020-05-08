@@ -102,8 +102,8 @@ expressApp.get('/mod-compatibility', (req, res) => {
   if (req.query.format === "metadata") {
     res.send(
       mods.map(mod => ({
-        status: mod.status,
-        name: mod.name,
+        status: parseInt(mod.status) || 0,
+        name: mod.name || '',
         workshopId: parseInt(mod.steam) || 0,
         notes: mod.obs || undefined
       }))
