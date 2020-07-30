@@ -115,12 +115,13 @@ module.exports.execute = function(message, args) {
     return message.channel.send("No results.")
   }
   
-  let embed = new Discord.RichEmbed()
+  let embed = new Discord.MessageEmbed()
     .setColor('#0099ff');
     
   let description = '';
   
-  for(const mod of result.slice(0, 3)) {
+  for(const entry of result.slice(0, 3)) {
+    const mod = entry.item;
     let name = mod.name[0].toUpperCase() + mod.name.slice(1);
     
     description += emotes[mod.status];
