@@ -10,7 +10,7 @@ module.exports = {
     let callingUser = message.channel.guild.member(message.author);
     
     // Make sure calling user is a manager or above
-    let role = callingUser.roles.find(role => role.name == 'Staff');
+    let role = callingUser.roles.cache.some(role => role.name === 'Staff');
     
     if (!role) {
       return;
