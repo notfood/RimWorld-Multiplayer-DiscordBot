@@ -1,28 +1,31 @@
-const Discord = require('discord.js');
-const Fuse = require('fuse.js');
-const {
-  google
-} = require('googleapis');
-const {
-  spreadsheet,
-  range,
-  google_email,
-  google_private_key,
-} = require('../config.js');
+import { EmbedBuilder, SlashCommandBuilder } from 'discord.js';
+import Fuse from 'fuse.js'
+import { google } from 'googleapis';
+import { spreadsheet, range, google_email, google_private_key } from '../config.js';
 
-let fuse;
+export const cooldown = 5;
+export const data = new SlashCommandBuilder()
+  .setName('mod')
+  .setDescription('Show mod multiplayer compatibility report.')
+  .addStringOption(option =>
+    option.setName('name')
+      .setDescription('Name to search.')
+      .setRequired(true));
 
-module.exports = {
-  name: 'mod',
-  description: 'Show mod multiplayer compatibility report.',
-  aliases: ['mods'],
-  usage: '[mod name]',
-  cooldown: 5,
-  args: true,
-  mods: [],
-};
+export const mods = [];
+const fuse = new Fuse(mods, {
+  shouldSort: true,
+  tokenize: true,
+  matchAllTokens: true,
+  threshold: 0.3,
+  location: 0,
+  distance: 32,
+  maxPatternLength: 16,
+  minMatchCharLength: 4,
+  keys: ['name', 'desc', 'steam']
+});
 
-module.exports.init = async function() {
+export async function init() {
   // Authorize Client for spreadsheets
   let jwtClient = await authorize();
   if (jwtClient === null) {
@@ -44,7 +47,8 @@ module.exports.init = async function() {
     
     const rows = response.data.values;
     if (rows.length) {
-      const mods = rows.map((row) => {
+      mods.length = 0;
+      mods.push(...rows.map((row) => {
         return {
           status: row[0],
           name: row[1],
@@ -53,20 +57,8 @@ module.exports.init = async function() {
           tags: row[4],
           obs: row[5],
         };
-      });
-      module.exports.mods = mods;
-      var options = {
-        shouldSort: true,
-        tokenize: true,
-        matchAllTokens: true,
-        threshold: 0.3,
-        location: 0,
-        distance: 32,
-        maxPatternLength: 16,
-        minMatchCharLength: 4,
-        keys: ["name", "desc", "steam"]
-      };
-      fuse = new Fuse(mods, options);
+      }));
+      fuse.setCollection(mods);
     } else {
       console.log('No data found.');
     }
@@ -105,20 +97,21 @@ const tags = {
   'xml': '<:code_xml:540535292512174080>',
 };
 
-module.exports.execute = function(message, args) {
-  if (message.content.length < 8)
-    return;
+export async function execute(interaction) {
+  const name = interaction.options.getString('name');
   
-  const result = fuse.search(args.join(' '));
+  const result = fuse.search(name);
+
+  let reply = `Search: \`${name}\``;
   
   if (result.length == 0) {
-    return message.channel.send("No results.")
+    return await interaction.reply(reply + '\nNo results');
   }
-  
-  let embed = new Discord.MessageEmbed()
-    .setColor('#0099ff');
-    
+
   let description = '';
+  
+  let embed = new EmbedBuilder()
+    .setColor('#0099ff');
   
   for(const entry of result.slice(0, 3)) {
     const mod = entry.item;
@@ -154,5 +147,5 @@ module.exports.execute = function(message, args) {
   
   embed.setDescription(description);
   
-  message.channel.send(embed);
-};
+  await interaction.reply({content: reply, embeds: [embed]});
+}

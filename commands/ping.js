@@ -1,8 +1,8 @@
-module.exports = {
-  name: 'ping',
-  description: 'Ping!',
-  cooldown: 5,
-  execute(message) {
-    message.channel.send('Pong.');
-  },
-};
+import { SlashCommandBuilder } from 'discord.js';
+
+export const data = new SlashCommandBuilder()
+  .setName('ping')
+  .setDescription('Replies with Pong!');
+export async function execute(interaction) {
+  await interaction.reply('Pong!');
+}

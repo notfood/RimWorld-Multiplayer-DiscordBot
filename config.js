@@ -1,12 +1,14 @@
-require('dotenv').config();
-const config = {
-  "prefix": "!",
-  "google_private_key": process.env.google_private_key.replace(/\\n/g, '\n'),
-  "google_email": process.env.google_email,
-  "token": process.env.discord_token,
-  "spreadsheet": process.env.spreadsheet,
-  "expressPort": process.env.expressPort || 3000,
-  "range": "A3:F",
-}
+import dotenv from 'dotenv';
 
-module.exports = config;
+dotenv.config();
+
+export const google_private_key = process.env['google_private_key'].replace(/\\n/g, '\n');
+export const google_email = process.env['google_email'];
+export const spreadsheet = process.env['spreadsheet'];
+export const range = "A3:F";
+
+export const token = process.env['discord_token'];
+export const clientId = process.env['discord_clientId'];
+export const guildId = process.env['discord_guildId'];
+
+export const expressPort = process.env['expressPort'] || 3000;

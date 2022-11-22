@@ -1,17 +1,25 @@
-const fs = require('fs');
-const express = require('express');
-const Discord = require('discord.js');
-const { prefix, token, expressPort } = require('./config.js');
+import { Client, Events, GatewayIntentBits, Collection } from 'discord.js';
+import { readdirSync } from 'node:fs';
+import { token, expressPort } from './config.js';
 
-const client = new Discord.Client();
-client.commands = new Discord.Collection();
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
+client.once(Events.ClientReady, c => {
+	console.log(`Logged in as ${client.user.tag}`);
+  client.user.setStatus('dnd');
+  client.user.setActivity('RimWorld', {
+    type: 'PLAYING'
+  });
+});
+
+client.commands = new Collection();
+
+const commandFiles = readdirSync('commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  
-  if (typeof command.init === "function") {
+  console.log('Loading ' + file);
+	const command = await import(`./commands/${file}`);
+  if ('init' in command && typeof command.init === 'function') {
     try {
       command.init();
     } catch (error) {
@@ -21,79 +29,55 @@ for (const file of commandFiles) {
       process.exit();
     }
   }
-  
-  client.commands.set(command.name, command);
+	if ('data' in command && 'execute' in command) {
+		client.commands.set(command.data.name, command);
+	} else {
+		console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+	}
 }
 
-const cooldowns = new Discord.Collection();
+const cooldowns = new Collection();
 
-client.on('ready', function () {
-  console.log(`Logged in as ${client.user.tag}`);
-  client.user.setStatus('dnd');
-  client.user.setActivity('RimWorld', {
-    type: 'PLAYING'
-  });
-});
+client.on(Events.InteractionCreate, async interaction => {
+	if (!interaction.isChatInputCommand()) return;
 
-client.on('message', message => {
-  if (!message.content.startsWith(prefix) || message.author.bot)
-    return;
-  
-  const args = message.content.slice(prefix.length).split(/ +/);
-  const commandName = args.shift().toLowerCase();
-  
-  const command = client.commands.get(commandName) || client.commands.find(cmd => cmd.aliases && cmd.aliases.includes(commandName));
-  
-  if (!command)
-    return;
-  
-  if (command.guildOnly && message.channel.type !== 'text') {
-    return message.reply('I can\'t execute that command inside DMs!');
-  }
-  
-  if (command.args && !args.length) {
-    let reply = `You didn't provide any arguments, ${message.author}!`;
-    
-    if (command.usage) {
-      reply += `\nThe proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
-    }
-    
-    return message.channel.send(reply);
-  }
-  
-  if (!cooldowns.has(command.name)) {
-    cooldowns.set(command.name, new Discord.Collection());
+  const command = interaction.client.commands.get(interaction.commandName);
+  if (!command) {
+		console.error(`No command matching ${interaction.commandName} was found.`);
+		return;
+	}
+
+  if (!cooldowns.has(command.data.name)) {
+    cooldowns.set(command.data.name, new Collection());
   }
   
   const now = Date.now();
-  const timestamps = cooldowns.get(command.name);
+  const timestamps = cooldowns.get(command.data.name);
   const cooldownAmount = (command.cooldown || 3) * 1000;
   
-  if (timestamps.has(message.author.id)) {
-    const expirationTime = timestamps.get(message.author.id) + cooldownAmount;
+  if (timestamps.has(interaction.user.id)) {
+    const expirationTime = timestamps.get(interaction.user.id) + cooldownAmount;
     
     if (now < expirationTime) {
       const timeLeft = (expirationTime - now) / 1000;
-      return message.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.name}\` command.`);
+      return await interaction.reply(`please wait ${timeLeft.toFixed(1)} more second(s) before reusing the \`${command.data.name}\` command.`);
     }
   }
   
-  timestamps.set(message.author.id, now);
-  setTimeout(() => timestamps.delete(message.author.id), cooldownAmount);
-  
+  timestamps.set(interaction.user.id, now);
+  setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
+
   try {
-    command.execute(message, args);
-  } catch (error) {
-    console.error(error);
-    message.reply('there was an error trying to execute that command!');
-  }
+		await command.execute(interaction);
+	} catch (error) {
+		console.error(error);
+		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+	}
 });
 
-if (token) {
-  client.login(token);
-} else {
-  console.warn("No discord_token passed! Bot not running.");
-}
+client.login(token);
+
+import express from 'express';
 
 const expressApp = express();
 expressApp.get('/', (req, res) => res.send('The Times 3 January 2009 Chancellor on brink of second bailout for banks'));
